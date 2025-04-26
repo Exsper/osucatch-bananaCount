@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="robots" content="nofollow, noindex, noarchive">
+    <title>ctb香蕉计算</title>
+</head>
+
+<body class="h">
+    <div>
+        <span>输入Bid，通过osu.direct获取谱面: </span>
+        <input type="number" id="bid" value="1612604" style="width: 120px;" />
+        <button id="fetchBeatmap" onclick="fetchOsuFile()">获取谱面</button>
+        <span>或导入本地谱面文件（拖拽到网页中也行）: </span>
+        <input type="file" id="fileInput">
+        <br>
+        <span id="msg"></span>
+        <br>
+        <span>EZ/HR: </span>
+        <select size="1" id="select1">
+            <option value="" selected> </option>
+            <option value="EZ">EZ</option>
+            <option value="HR">HR</option>
+        </select>
+        <span>DT/HT: </span>
+        <select size="1" id="select2">
+            <option value="" selected> </option>
+            <option value="DT">DT</option>
+            <option value="HT">HT</option>
+        </select>
+        <input type="checkbox" id="NF" /> <label for="NF">NF</label>
+        <input type="checkbox" id="HD" /> <label for="HD">HD</label>
+        <input type="checkbox" id="FL" /> <label for="FL">FL</label>
+        <br>
+    </div>
+    <br>
+    <div>
+        <span>无香蕉SS总分：</span><span id="baseScoreSS"></span>
+        <br>
+        <br>
+        <span>参考总分（须FC）：</span><input type="number" id="ScoreA" value="1000000" style="width: 120px;" /> <span
+            id="scoreAinfo"></span>
+        <br>
+        <span>你的总分（须FC）：</span><input type="number" id="ScoreB" value="1000000" style="width: 120px;" /> <span
+            id="scoreBinfo"></span>
+        <br>
+        <button id="cal" onclick="calculate()">计算得分（每次修改mod需重新计算）</button>
+    </div>
+
+    <script src="js/util.js"></script>
+
+    <script src="js/beatmap/beatmap.js"></script>
+    <script src="js/beatmap/timingpoint.js"></script>
+    <script src="js/beatmap/hitobject.js"></script>
+    <script src="js/beatmap/point.js"></script>
+    <script src="js/beatmap/scroll.js"></script>
+
+    <script src="js/standard/hitcircle.js"></script>
+    <script src="js/standard/slider.js"></script>
+    <script src="js/standard/curve/curve.js"></script>
+    <script src="js/standard/curve/equaldistancemulticurve.js"></script>
+    <script src="js/standard/curve/linearbezier.js"></script>
+    <script src="js/standard/curve/catmullcurve.js"></script>
+    <script src="js/standard/curve/curvetype.js"></script>
+    <script src="js/standard/curve/bezier2.js"></script>
+    <script src="js/standard/curve/centripetalcatmullrom.js"></script>
+    <script src="js/standard/curve/circumstancedcircle.js"></script>
+    <script src="js/standard/spinner.js"></script>
+
+    <script src="js/catch/LegacyRandom.js"></script>
+    <script src="js/catch/catch.js"></script>
+    <script src="js/catch/fruit.js"></script>
+    <script src="js/catch/bananashower.js"></script>
+    <script src="js/catch/juicestream.js"></script>
+    <script src="js/catch/PalpableCatchHitObject.js"></script>
+
+    <script>
+        var currentBeatmap = null;
+
+        function getMods() {
+            let mods = {
+                EZ: false,
+                HR: false,
+                DT: false,
+                HT: false,
+                NF: false,
+                HD: false,
+                FL: false,
+            };
+            let s1 = document.getElementById("select1");
+            if (s1.value) {
+                if (s1.value === "EZ") mods.EZ = true;
+                else if (s1.value === "HR") mods.HR = true;
+            }
+            let s2 = document.getElementById("select2");
+            if (s2.value) {
+                if (s2.value === "DT") mods.DT = true;
+                else if (s2.value === "HT") mods.HT = true;
+            }
+            let NF = document.getElementById("NF");
+            if (NF.checked) mods.NF = true;
+            let HD = document.getElementById("HD");
+            if (HD.checked) mods.HD = true;
+            let FL = document.getElementById("FL");
+            if (FL.checked) mods.FL = true;
+
+            return mods;
+        }
+
+        const readLocalFile = function (osufile) {
+            !async function () {
+                var self = this;
+                try {
+                    self.beatmap = Beatmap.parse(osufile, getMods());
+                    document.getElementById("msg").innerText = "已导入谱面：" + self.beatmap.toString();
+                    currentBeatmap = osufile;
+                }
+                catch (e) {
+                    currentBeatmap = null;
+                    console.log(e);
+                    document.getElementById("msg").innerText = e;
+                }
+
+            }();
+        }
+
+        var fileInput = document.querySelector('#fileInput');
+        fileInput.onchange = function () {
+            var file = this.files[0];
+            var reader = new FileReader();
+            reader.readAsText(file);
+            reader.onload = function () {
+                readLocalFile(reader.result);
+            };
+        };
+
+        document.ondragover = function (e) {
+            e.preventDefault();
+        };
+        document.ondrop = function (e) {
+            e.preventDefault();
+            var list = e.dataTransfer.files;
+            var file = list[0];
+            var reader = new FileReader();
+            reader.readAsText(file);
+            reader.onload = function () {
+                readLocalFile(reader.result);
+            };
+        };
+
+        function fetchOsuFile() {
+            var beatmapID = document.getElementById("bid").value;
+            if (!beatmapID || isNaN(beatmapID)) {
+                document.getElementById("msg").innerText = "请指定bid";
+                return;
+            }
+            var osuFileUrl = "https://osu.direct/api/osu/" + beatmapID;
+            document.getElementById("fetchBeatmap").disabled = true;
+            !async function () {
+                var self = this;
+                let osufile;
+                try {
+                    const response = await fetch(osuFileUrl);
+                    osufile = await response.text();
+                }
+                catch (e) {
+                    console.log(e);
+                    document.getElementById("msg").innerText = "从osu.direct获取谱面文件失败";
+                    document.getElementById("fetchBeatmap").disabled = false;
+                    currentBeatmap = null;
+                    return;
+                }
+                if (!osufile) {
+                    document.getElementById("fetchBeatmap").disabled = false;
+                    currentBeatmap = null;
+                    return;
+                }
+                document.getElementById("fetchBeatmap").disabled = false;
+                try {
+                    self.beatmap = Beatmap.parse(osufile, getMods());
+                    document.getElementById("msg").innerText = "已导入谱面：" + self.beatmap.toString();
+                    currentBeatmap = osufile;
+                }
+                catch (e) {
+                    console.log(e);
+                    currentBeatmap = null;
+                    document.getElementById("msg").innerText = e;
+                }
+            }();
+        }
+
+        function calculate() {
+            var self = this;
+            if (!currentBeatmap) {
+                document.getElementById("msg").innerText = "请先导入谱面";
+                return;
+            }
+            let mods = getMods();
+            self.beatmap = Beatmap.parse(currentBeatmap, mods);
+            let modString = "";
+            if (mods.EZ) modString += "EZ";
+            if (mods.HD) modString += "HD";
+            if (mods.DT) modString += "DT";
+            if (mods.HT) modString += "HT";
+            if (mods.HR) modString += "HR";
+            if (mods.FL) modString += "FL";
+            if (mods.NF) modString += "NF";
+            document.getElementById("msg").innerText = "谱面：" + self.beatmap.toString() + ", mods: " + modString;
+            document.getElementById("baseScoreSS").innerText = self.beatmap.baseScoreSS;
+
+            var scoreA = document.getElementById("ScoreA").value;
+            if (!scoreA || isNaN(scoreA)) {
+                document.getElementById("scoreAinfo").innerText = "请输入正确得分";
+            }
+            else {
+                let bananaScoreA = scoreA - self.beatmap.baseScoreSS;
+                document.getElementById("scoreAinfo").innerText = calCatchCount(bananaScoreA);
+            }
+            var scoreB = document.getElementById("ScoreB").value;
+            if (!scoreB || isNaN(scoreB)) {
+                document.getElementById("scoreBinfo").innerText = "请输入正确得分";
+            }
+            else {
+                let bananaScoreB = scoreB - self.beatmap.baseScoreSS;
+                document.getElementById("scoreBinfo").innerText = calCatchCount(bananaScoreB);
+            }
+        }
+
+        function calCatchCount(bananaScore) {
+            if (bananaScore < -1100) {
+                return "可能不是FC成绩？或者mod选择错误？请检查！";
+            }
+            let tmp = bananaScore % 1100;
+            if (tmp < 0) tmp += 1100;
+            let missTiny = 0;
+            let unsure = false;
+            if (tmp > 0) {
+                tmp = 1100 - tmp;
+                missTiny = tmp / 10;
+                if (tmp % 10 !== 0) unsure = true;
+            }
+            bananaScore += missTiny * 10;
+            let bananaCount = bananaScore / 1100;
+            if (bananaScore % 1100 !== 0) unsure = true;
+            let bananaString = (bananaCount > 0) ? "接到 " + bananaCount + " 个香蕉" : "";
+            let missString = (missTiny > 0) ? "漏接 " + missTiny + " 个小果" : "";
+            let result = bananaString + "，" + missString + ((unsure) ? "（不确定）" : "");
+            return result;
+        }
+    </script>
+</body>
+
+</html>
