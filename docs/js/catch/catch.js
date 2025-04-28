@@ -125,6 +125,7 @@ function Catch(osu, mods) {
     this.palpableObjects = [];
     this.fullCatchObjects = [];
 
+    this.accObjectCount = 0;
     this.bananaCount = 0;
 
     for (var i = 0; i < this.HitObjects.length; i++) {
@@ -141,6 +142,7 @@ function Catch(osu, mods) {
 
             this.palpableObjects.push(pch);
             this.fullCatchObjects.push(pch);
+            this.accObjectCount++;
         }
         else if (hitObject instanceof BananaShower) {
             hitObject.nested.forEach(banana => {
@@ -151,14 +153,13 @@ function Catch(osu, mods) {
         else if (hitObject instanceof JuiceStream) {
             hitObject.nested.forEach(item => {
                 this.fullCatchObjects.push(item);
+                this.accObjectCount++;
                 if (item.type != "TinyDroplet") this.palpableObjects.push(item);
             });
         }
     }
     this.palpableObjects.sort((a, b) => a.time - b.time);
     this.fullCatchObjects.sort((a, b) => a.time - b.time);
-
-    this.palpableObjectCount = this.palpableObjects.length;
 
     // scoring
     let playableLength = this.fullCatchObjects[this.fullCatchObjects.length - 1].time - this.fullCatchObjects[0].time;

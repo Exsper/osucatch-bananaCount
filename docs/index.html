@@ -216,7 +216,7 @@
             }
             else {
                 let bananaScoreA = scoreA - self.beatmap.baseScoreSS;
-                document.getElementById("scoreAinfo").innerText = calCatchCount(bananaScoreA, self.beatmap.palpableObjectCount, self.beatmap.bananaCount);
+                document.getElementById("scoreAinfo").innerText = calCatchCount(bananaScoreA, self.beatmap.accObjectCount, self.beatmap.bananaCount);
             }
             var scoreB = document.getElementById("ScoreB").value;
             if (!scoreB || isNaN(scoreB)) {
@@ -224,7 +224,7 @@
             }
             else {
                 let bananaScoreB = scoreB - self.beatmap.baseScoreSS;
-                document.getElementById("scoreBinfo").innerText = calCatchCount(bananaScoreB, self.beatmap.palpableObjectCount, self.beatmap.bananaCount);
+                document.getElementById("scoreBinfo").innerText = calCatchCount(bananaScoreB, self.beatmap.accObjectCount, self.beatmap.bananaCount);
             }
         }
 
