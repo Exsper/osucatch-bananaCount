@@ -161,25 +161,31 @@ function Catch(osu, mods) {
     for (let i = 0; i < this.Breaks.length; i++) {
         totalBreakTime += this.Breaks[i].end - this.Breaks[i].start;
     }
+    // drainLength is int (var type is int in C#)
     let drainLength = Math.round(Math.max(playableLength - totalBreakTime, 0) / 1000);
 
-    let objectToDrainRatio = Math.round(Math.max(0, Math.min(this.HitObjects.length / drainLength * 8, 16)));
-    //let objectToDrainRatio = new Decimal(this.HitObjects.length.toString()).div(drainLength.toString()).mul("8").toNumber();
-    //objectToDrainRatio = Math.round(Math.max(0, objectToDrainRatio, 16));
+    // objectToDrainRatio is float
+    let objectToDrainRatio = Math.max(0, Math.min(this.HitObjects.length / drainLength * 8, 16));
 
+    // difficultyMultiplier is int (used math.round in C#)
     let difficultyMultiplier = Math.round((this.OriginHPDrainRate + this.OriginCircleSize + this.OriginOverallDifficulty + objectToDrainRatio) / 38 * 5);
-    //let difficultyMultiplier = new Decimal((this.OriginHPDrainRate + this.OriginCircleSize + this.OriginOverallDifficulty + objectToDrainRatio).toString()).div("38").mul("5");
 
-
+    // modMultiplier is double
     let modMultiplier = 1;
 
-    if (mods.EZ) { modMultiplier *= 0.5; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
-    else if (mods.HR) { modMultiplier *= 1.12; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
-    if (mods.DT) { modMultiplier *= 1.06; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
-    else if (mods.HT) { modMultiplier *= 0.3; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
-    if (mods.NF) { modMultiplier *= 0.5; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
-    if (mods.HD) { modMultiplier *= 1.06; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
-    if (mods.FL) { modMultiplier *= 1.12; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
+    if (mods.EZ) modMultiplier *= 0.5;
+    else if (mods.HR) modMultiplier *= 1.12;
+    if (mods.DT) modMultiplier *= 1.06;
+    else if (mods.HT) modMultiplier *= 0.3;
+    if (mods.NF) modMultiplier *= 0.5;
+    if (mods.HD) modMultiplier *= 1.06;
+    if (mods.FL) modMultiplier *= 1.12;
+
+    // decimal fix
+    modMultiplier = parseFloat(modMultiplier.toFixed(8));
+
+    // ScoreMultiplier is double
+    let ScoreMultiplier = difficultyMultiplier * modMultiplier;
 
     this.baseScoreSS = 0; // no banana, full tinyDroplets
     let previousCombo = 0;
@@ -188,17 +194,13 @@ function Catch(osu, mods) {
         let currentObject = this.fullCatchObjects[i];
         let comboMultiplier = Math.max(previousCombo - 1, 0);
         if (currentObject.type == "Fruit") {
-            let noteScore = 300 * (1 + (comboMultiplier * difficultyMultiplier * modMultiplier) / 25);
-            let scoreStringSplit = noteScore.toFixed(8).split(".");
-            let scoreInt = parseInt(scoreStringSplit[0]);
-            /*
-            let firstDecimal = parseInt(scoreStringSplit[1].substring(0, 1));
-            if (firstDecimal > 5) scoreInt += 1;
-            else if (firstDecimal == 5) {
-                if (scoreInt % 2 == 1) scoreInt += 1;
-            }
-            console.log(this.baseScoreSS + "(+" + scoreInt + ")");
-            */
+            // 300 / 25 = 12
+            let scoreIncrease = 12 * comboMultiplier * ScoreMultiplier;
+            // scoreIncrease is int (used (int) in c#)
+            let scoreIncreaseStringSplit = scoreIncrease.toFixed(6).split(".");
+            let scoreIncreaseInt = parseInt(scoreIncreaseStringSplit[0]);
+            // fruit score = 300 + scoreIncrease
+            let scoreInt = 300 + scoreIncreaseInt;
             this.baseScoreSS += scoreInt;
             previousCombo += 1;
         }
