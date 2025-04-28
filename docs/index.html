@@ -216,7 +216,7 @@
             }
             else {
                 let bananaScoreA = scoreA - self.beatmap.baseScoreSS;
-                document.getElementById("scoreAinfo").innerText = calCatchCount(bananaScoreA);
+                document.getElementById("scoreAinfo").innerText = calCatchCount(bananaScoreA, self.beatmap.palpableObjectCount, self.beatmap.bananaCount);
             }
             var scoreB = document.getElementById("ScoreB").value;
             if (!scoreB || isNaN(scoreB)) {
@@ -224,11 +224,11 @@
             }
             else {
                 let bananaScoreB = scoreB - self.beatmap.baseScoreSS;
-                document.getElementById("scoreBinfo").innerText = calCatchCount(bananaScoreB);
+                document.getElementById("scoreBinfo").innerText = calCatchCount(bananaScoreB, self.beatmap.palpableObjectCount, self.beatmap.bananaCount);
             }
         }
 
-        function calCatchCount(bananaScore) {
+        function calCatchCount(bananaScore, hitObjectCount, totalBananaCount) {
             if (bananaScore < -1100) {
                 return "可能不是FC成绩？或者mod选择错误？请检查！";
             }
@@ -244,9 +244,11 @@
             bananaScore += missTiny * 10;
             let bananaCount = bananaScore / 1100;
             if (bananaScore % 1100 !== 0) unsure = true;
-            let bananaString = (bananaCount > 0) ? "接到 " + bananaCount + " 个香蕉" : "";
-            let missString = (missTiny > 0) ? "漏接 " + missTiny + " 个小果" : "";
-            let result = bananaString + "，" + missString + ((unsure) ? "（不确定）" : "");
+            let acc = (hitObjectCount - missTiny) / hitObjectCount * 100;
+            let bananaPercent = (totalBananaCount > 0) ? bananaCount / totalBananaCount * 100 : -1;
+            let bananaString = (totalBananaCount > 0) ? ((bananaCount > 0) ? "接到 " + bananaCount + " 个香蕉 (" + bananaPercent.toFixed(2) + "%)" : "香蕉全避") : "本图无香蕉";
+            let missString = (missTiny > 0) ? "，漏接 " + missTiny + " 个小果 (Acc: " + acc.toFixed(2) + "%)" : "";
+            let result = bananaString + missString + ((unsure) ? "（不确定）" : "");
             return result;
         }
     </script>

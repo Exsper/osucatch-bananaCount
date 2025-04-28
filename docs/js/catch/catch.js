@@ -125,6 +125,8 @@ function Catch(osu, mods) {
     this.palpableObjects = [];
     this.fullCatchObjects = [];
 
+    this.bananaCount = 0;
+
     for (var i = 0; i < this.HitObjects.length; i++) {
         let hitObject = this.HitObjects[i];
         if (hitObject instanceof Fruit) {
@@ -143,6 +145,7 @@ function Catch(osu, mods) {
         else if (hitObject instanceof BananaShower) {
             hitObject.nested.forEach(banana => {
                 this.fullCatchObjects.push(banana);
+                this.bananaCount += 1;
             });
         }
         else if (hitObject instanceof JuiceStream) {
@@ -154,6 +157,8 @@ function Catch(osu, mods) {
     }
     this.palpableObjects.sort((a, b) => a.time - b.time);
     this.fullCatchObjects.sort((a, b) => a.time - b.time);
+
+    this.palpableObjectCount = this.palpableObjects.length;
 
     // scoring
     let playableLength = this.fullCatchObjects[this.fullCatchObjects.length - 1].time - this.fullCatchObjects[0].time;
