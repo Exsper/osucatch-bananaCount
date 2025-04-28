@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="robots" content="nofollow, noindex, noarchive">
     <title>ctb香蕉计算</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 
 <body class="h">
@@ -13,40 +14,61 @@
         <span>输入Bid，通过osu.direct获取谱面: </span>
         <input type="number" id="bid" value="1612604" style="width: 120px;" />
         <button id="fetchBeatmap" onclick="fetchOsuFile()">获取谱面</button>
+        <br>
+        <br>
         <span>或导入本地谱面文件（拖拽到网页中也行）: </span>
         <input type="file" id="fileInput">
         <br>
         <span id="msg"></span>
         <br>
-        <span>EZ/HR: </span>
-        <select size="1" id="select1">
-            <option value="" selected> </option>
-            <option value="EZ">EZ</option>
-            <option value="HR">HR</option>
-        </select>
-        <span>DT/HT: </span>
-        <select size="1" id="select2">
-            <option value="" selected> </option>
-            <option value="DT">DT</option>
-            <option value="HT">HT</option>
-        </select>
-        <input type="checkbox" id="NF" /> <label for="NF">NF</label>
-        <input type="checkbox" id="HD" /> <label for="HD">HD</label>
-        <input type="checkbox" id="FL" /> <label for="FL">FL</label>
+        <table>
+            <tr>
+                <td class="modgrid">
+                    <button class="mod" id="EZ" style="background-color: rgb(63, 147, 63);"
+                        onclick="switchMod('EZ')">EZ</button>
+                </td>
+                <td class="modgrid">
+                    <button class="mod" id="NF" style="background-color: rgb(20, 20, 100);"
+                        onclick="switchMod('NF')">NF</button>
+                </td>
+                <td class="modgrid">
+                    <button class="mod" id="HT" style="background-color: rgb(72, 72, 72);"
+                        onclick="switchMod('HT')">HT</button>
+                </td>
+            </tr>
+            <tr>
+                <td class="modgrid">
+                    <button class="mod" id="HR" style="background-color: rgb(122, 15, 15);"
+                        onclick="switchMod('HR')">HR</button>
+                </td>
+                <td class="modgrid"></td>
+                <td class="modgrid">
+                    <button class="mod" id="DT" style="background-color: rgb(88, 28, 157);"
+                        onclick="switchMod('DT')">DT</button>
+                </td>
+                <td class="modgrid">
+                    <button class="mod" id="HD" style="background-color: rgb(157, 102, 24);"
+                        onclick="switchMod('HD')">HD</button>
+                </td>
+                <td class="modgrid">
+                    <button class="mod" id="FL" style="background-color: rgb(43, 43, 43);"
+                        onclick="switchMod('FL')">FL</button>
+                </td>
+            </tr>
+        </table>
         <br>
+        <span id="modinfo">mods: None</span>
     </div>
     <br>
     <div>
         <span>无香蕉SS总分：</span><span id="baseScoreSS"></span>
         <br>
         <br>
-        <span>参考总分（须FC）：</span><input type="number" id="ScoreA" value="1000000" style="width: 120px;" /> <span
-            id="scoreAinfo"></span>
-        <br>
-        <span>你的总分（须FC）：</span><input type="number" id="ScoreB" value="1000000" style="width: 120px;" /> <span
-            id="scoreBinfo"></span>
-        <br>
+        <span>V1成绩得分（须FC）：</span><input type="number" id="ScoreA" value="1000000" style="width: 120px;" />
         <button id="cal" onclick="calculate()">计算得分（每次修改mod需重新计算）</button>
+        <br>
+        <br>
+        <span id="scoreAinfo"></span>
     </div>
 
     <script src="js/util.js"></script>
@@ -78,42 +100,34 @@
 
     <script>
         var currentBeatmap = null;
+        var mods = {
+            EZ: false,
+            HR: false,
+            DT: false,
+            HT: false,
+            NF: false,
+            HD: false,
+            FL: false,
+        };
 
-        function getMods() {
-            let mods = {
-                EZ: false,
-                HR: false,
-                DT: false,
-                HT: false,
-                NF: false,
-                HD: false,
-                FL: false,
-            };
-            let s1 = document.getElementById("select1");
-            if (s1.value) {
-                if (s1.value === "EZ") mods.EZ = true;
-                else if (s1.value === "HR") mods.HR = true;
-            }
-            let s2 = document.getElementById("select2");
-            if (s2.value) {
-                if (s2.value === "DT") mods.DT = true;
-                else if (s2.value === "HT") mods.HT = true;
-            }
-            let NF = document.getElementById("NF");
-            if (NF.checked) mods.NF = true;
-            let HD = document.getElementById("HD");
-            if (HD.checked) mods.HD = true;
-            let FL = document.getElementById("FL");
-            if (FL.checked) mods.FL = true;
-
-            return mods;
+        function updateModInfo() {
+            let modString = "";
+            if (mods.EZ) modString += "EZ ";
+            if (mods.HD) modString += "HD ";
+            if (mods.DT) modString += "DT ";
+            if (mods.HT) modString += "HT ";
+            if (mods.HR) modString += "HR ";
+            if (mods.FL) modString += "FL ";
+            if (mods.NF) modString += "NF ";
+            if (modString === "") modString = "None";
+            document.getElementById("modinfo").innerText = "mods: " + modString;
         }
 
         const readLocalFile = function (osufile) {
             !async function () {
                 var self = this;
                 try {
-                    self.beatmap = Beatmap.parse(osufile, getMods());
+                    self.beatmap = Beatmap.parse(osufile, mods);
                     document.getElementById("msg").innerText = "已导入谱面：" + self.beatmap.toString();
                     currentBeatmap = osufile;
                 }
@@ -122,7 +136,6 @@
                     console.log(e);
                     document.getElementById("msg").innerText = e;
                 }
-
             }();
         }
 
@@ -179,7 +192,7 @@
                 }
                 document.getElementById("fetchBeatmap").disabled = false;
                 try {
-                    self.beatmap = Beatmap.parse(osufile, getMods());
+                    self.beatmap = Beatmap.parse(osufile, mods);
                     document.getElementById("msg").innerText = "已导入谱面：" + self.beatmap.toString();
                     currentBeatmap = osufile;
                 }
@@ -197,17 +210,8 @@
                 document.getElementById("msg").innerText = "请先导入谱面";
                 return;
             }
-            let mods = getMods();
             self.beatmap = Beatmap.parse(currentBeatmap, mods);
-            let modString = "";
-            if (mods.EZ) modString += "EZ";
-            if (mods.HD) modString += "HD";
-            if (mods.DT) modString += "DT";
-            if (mods.HT) modString += "HT";
-            if (mods.HR) modString += "HR";
-            if (mods.FL) modString += "FL";
-            if (mods.NF) modString += "NF";
-            document.getElementById("msg").innerText = "谱面：" + self.beatmap.toString() + ", mods: " + modString;
+            document.getElementById("msg").innerText = "谱面：" + self.beatmap.toString();
             document.getElementById("baseScoreSS").innerText = self.beatmap.baseScoreSS;
 
             var scoreA = document.getElementById("ScoreA").value;
@@ -217,14 +221,6 @@
             else {
                 let bananaScoreA = scoreA - self.beatmap.baseScoreSS;
                 document.getElementById("scoreAinfo").innerText = calCatchCount(bananaScoreA, self.beatmap.accObjectCount, self.beatmap.bananaCount);
-            }
-            var scoreB = document.getElementById("ScoreB").value;
-            if (!scoreB || isNaN(scoreB)) {
-                document.getElementById("scoreBinfo").innerText = "请输入正确得分";
-            }
-            else {
-                let bananaScoreB = scoreB - self.beatmap.baseScoreSS;
-                document.getElementById("scoreBinfo").innerText = calCatchCount(bananaScoreB, self.beatmap.accObjectCount, self.beatmap.bananaCount);
             }
         }
 
@@ -250,6 +246,41 @@
             let missString = (missTiny > 0) ? "，漏接 " + missTiny + " 个小果 (Acc: " + acc.toFixed(2) + "%)" : "";
             let result = bananaString + missString + ((unsure) ? "（不确定）" : "");
             return result;
+        }
+
+        function switchMod(modString) {
+            if (!modString) return;
+            if (mods[modString] == undefined) return;
+
+            // EZ与HR不能并存
+            if (modString === "EZ" && mods.HR) {
+                mods.HR = false;
+                document.getElementById("HR").classList.remove("mod-selected");
+            }
+            if (modString === "HR" && mods.EZ) {
+                mods.EZ = false;
+                document.getElementById("EZ").classList.remove("mod-selected");
+            }
+
+            // DT与HT不能并存
+            if (modString === "DT" && mods.HT) {
+                mods.HT = false;
+                document.getElementById("HT").classList.remove("mod-selected");
+            }
+            if (modString === "HT" && mods.DT) {
+                mods.DT = false;
+                document.getElementById("DT").classList.remove("mod-selected");
+            }
+
+            if (mods[modString]) {
+                mods[modString] = false;
+                document.getElementById(modString).classList.remove("mod-selected");
+            }
+            else {
+                mods[modString] = true;
+                document.getElementById(modString).classList.add("mod-selected");
+            }
+            updateModInfo();
         }
     </script>
 </body>
