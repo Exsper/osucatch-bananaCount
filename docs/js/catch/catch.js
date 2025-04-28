@@ -173,13 +173,13 @@ function Catch(osu, mods) {
 
     let modMultiplier = 1;
 
-    if (mods.EZ) modMultiplier *= 0.5;
-    else if (mods.HR) modMultiplier *= 1.12;
-    if (mods.DT) modMultiplier *= 1.06;
-    else if (mods.HT) modMultiplier *= 0.3;
-    if (mods.NF) modMultiplier *= 0.5;
-    if (mods.HD) modMultiplier *= 1.06;
-    if (mods.FL) modMultiplier *= 1.12;
+    if (mods.EZ) { modMultiplier *= 0.5; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
+    else if (mods.HR) { modMultiplier *= 1.12; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
+    if (mods.DT) { modMultiplier *= 1.06; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
+    else if (mods.HT) { modMultiplier *= 0.3; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
+    if (mods.NF) { modMultiplier *= 0.5; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
+    if (mods.HD) { modMultiplier *= 1.06; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
+    if (mods.FL) { modMultiplier *= 1.12; modMultiplier = parseFloat(modMultiplier.toFixed(8)); }
 
     this.baseScoreSS = 0; // no banana, full tinyDroplets
     let previousCombo = 0;
@@ -188,7 +188,18 @@ function Catch(osu, mods) {
         let currentObject = this.fullCatchObjects[i];
         let comboMultiplier = Math.max(previousCombo - 1, 0);
         if (currentObject.type == "Fruit") {
-            this.baseScoreSS += Math.round(300 * (1 + (comboMultiplier * difficultyMultiplier * modMultiplier) / 25));
+            let noteScore = 300 * (1 + (comboMultiplier * difficultyMultiplier * modMultiplier) / 25);
+            let scoreStringSplit = noteScore.toFixed(8).split(".");
+            let scoreInt = parseInt(scoreStringSplit[0]);
+            /*
+            let firstDecimal = parseInt(scoreStringSplit[1].substring(0, 1));
+            if (firstDecimal > 5) scoreInt += 1;
+            else if (firstDecimal == 5) {
+                if (scoreInt % 2 == 1) scoreInt += 1;
+            }
+            console.log(this.baseScoreSS + "(+" + scoreInt + ")");
+            */
+            this.baseScoreSS += scoreInt;
             previousCombo += 1;
         }
         else if (currentObject.type == "Droplet") {
