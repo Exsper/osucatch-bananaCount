@@ -17,6 +17,11 @@ function Csharp_Round(num) {
     return numInt;
 }
 
+function Number2Float(num) {
+    let float32View = new DataView(new ArrayBuffer(4));
+    float32View.setFloat32(0, num);
+    return float32View.getFloat32(0);
+}
 
 function Catch(osu, mods) {
     Beatmap.call(this, osu, mods);
@@ -191,7 +196,7 @@ function Catch(osu, mods) {
     let drainLength = Csharp_Round(Math.max(playableLength - totalBreakTime, 0) / 1000);
 
     // objectToDrainRatio is float
-    let objectToDrainRatio = Math.max(0, Math.min(this.HitObjects.length / drainLength * 8, 16));
+    let objectToDrainRatio = Number2Float(Math.max(0, Math.min((this.HitObjects.length / drainLength * 8), 16)));
 
     // difficultyMultiplier is int (used math.round and (int) in C#)
     let difficultyMultiplier = Csharp_Round((this.OriginHPDrainRate + this.OriginCircleSize + this.OriginOverallDifficulty + objectToDrainRatio) / 38 * 5);
