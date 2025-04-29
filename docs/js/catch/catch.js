@@ -1,3 +1,23 @@
+// c# 将小数赋值给int，会直接向下取整
+function Csharp_Number2Int(num) {
+    let numSplit = num.toFixed(8).split(".");
+    return parseInt(numSplit[0]);
+}
+
+// c# round当小数为0.5时取偶
+function Csharp_Round(num) {
+    num = parseFloat(num.toFixed(8));
+    let numSplit = num.toFixed(8).split(".");
+    let numInt = parseInt(numSplit[0]);
+    let numDecimal = parseInt(numSplit[1]);
+    if (numDecimal > 50000000) numInt += 1;
+    else if (numDecimal == 50000000) {
+        if (numInt % 2 == 1) numInt += 1;
+    }
+    return numInt;
+}
+
+
 function Catch(osu, mods) {
     Beatmap.call(this, osu, mods);
 
@@ -168,13 +188,13 @@ function Catch(osu, mods) {
         totalBreakTime += this.Breaks[i].end - this.Breaks[i].start;
     }
     // drainLength is int (var type is int in C#)
-    let drainLength = Math.round(Math.max(playableLength - totalBreakTime, 0) / 1000);
+    let drainLength = Csharp_Round(Math.max(playableLength - totalBreakTime, 0) / 1000);
 
     // objectToDrainRatio is float
     let objectToDrainRatio = Math.max(0, Math.min(this.HitObjects.length / drainLength * 8, 16));
 
-    // difficultyMultiplier is int (used math.round in C#)
-    let difficultyMultiplier = Math.round((this.OriginHPDrainRate + this.OriginCircleSize + this.OriginOverallDifficulty + objectToDrainRatio) / 38 * 5);
+    // difficultyMultiplier is int (used math.round and (int) in C#)
+    let difficultyMultiplier = Csharp_Round((this.OriginHPDrainRate + this.OriginCircleSize + this.OriginOverallDifficulty + objectToDrainRatio) / 38 * 5);
 
     // modMultiplier is double
     let modMultiplier = 1;
@@ -203,12 +223,13 @@ function Catch(osu, mods) {
             // 300 / 25 = 12
             let scoreIncrease = 12 * comboMultiplier * ScoreMultiplier;
             // scoreIncrease is int (used (int) in c#)
-            let scoreIncreaseStringSplit = scoreIncrease.toFixed(6).split(".");
-            let scoreIncreaseInt = parseInt(scoreIncreaseStringSplit[0]);
+            let scoreIncreaseInt = Csharp_Number2Int(scoreIncrease);
             // fruit score = 300 + scoreIncrease
             let scoreInt = 300 + scoreIncreaseInt;
             this.baseScoreSS += scoreInt;
             previousCombo += 1;
+
+            // console.log(this.baseScoreSS + "(+" + scoreInt + ")");
         }
         else if (currentObject.type == "Droplet") {
             this.baseScoreSS += 100;
