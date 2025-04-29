@@ -65,6 +65,9 @@
         <br>
         <br>
         <span>V1成绩得分（须FC）：</span><input type="number" id="ScoreA" value="1000000" style="width: 120px;" />
+        <br>
+        <span>因为精度问题，如果计算Acc不对，则需要提供漏小果数，填-1则忽略该项：</span><input type="number" id="trueMissTiny" value="-1" style="width: 120px;" />
+        <br>
         <button id="cal" onclick="calculate()">计算得分（每次修改mod需重新计算）</button>
         <br>
         <br>
@@ -220,11 +223,12 @@
             }
             else {
                 let bananaScoreA = scoreA - self.beatmap.baseScoreSS;
-                document.getElementById("scoreAinfo").innerText = calCatchCount(bananaScoreA, self.beatmap.accObjectCount, self.beatmap.bananaCount);
+                let trueMissTiny = parseInt(document.getElementById("trueMissTiny").value);
+                document.getElementById("scoreAinfo").innerText = calCatchCount(bananaScoreA, trueMissTiny, self.beatmap.accObjectCount, self.beatmap.bananaCount);
             }
         }
 
-        function calCatchCount(bananaScore, hitObjectCount, totalBananaCount) {
+        function calCatchCount(bananaScore, trueMissTiny, hitObjectCount, totalBananaCount) {
             if (bananaScore < -1100) {
                 return "可能不是FC成绩？或者mod选择错误？请检查！";
             }
@@ -237,7 +241,16 @@
                 missTiny = tmp / 10;
                 if (tmp % 10 !== 0) unsure = true;
             }
-            bananaScore += missTiny * 10;
+            if (trueMissTiny >= 0) {
+                // 修正小果数量对成绩的影响
+                hitObjectCount -= (missTiny - trueMissTiny);
+                bananaScore += (missTiny - trueMissTiny) * 10;
+                missTiny = trueMissTiny;
+                return calCatchCount(bananaScore, -1, hitObjectCount, totalBananaCount);
+            }
+            else {
+                bananaScore += missTiny * 10;
+            }
             let bananaCount = bananaScore / 1100;
             if (bananaScore % 1100 !== 0) unsure = true;
             let acc = (hitObjectCount - missTiny) / hitObjectCount * 100;

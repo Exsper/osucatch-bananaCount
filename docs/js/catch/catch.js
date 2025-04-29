@@ -152,6 +152,7 @@ function Catch(osu, mods) {
 
     this.accObjectCount = 0;
     this.bananaCount = 0;
+    this.tinyCount = 0;
 
     for (var i = 0; i < this.HitObjects.length; i++) {
         let hitObject = this.HitObjects[i];
@@ -180,6 +181,7 @@ function Catch(osu, mods) {
                 this.fullCatchObjects.push(item);
                 this.accObjectCount++;
                 if (item.type != "TinyDroplet") this.palpableObjects.push(item);
+                else this.tinyCount++;
             });
         }
     }
@@ -193,7 +195,7 @@ function Catch(osu, mods) {
         totalBreakTime += this.Breaks[i].end - this.Breaks[i].start;
     }
     // drainLength is int (var type is int in C#)
-    let drainLength = Csharp_Round(Math.max(playableLength - totalBreakTime, 0) / 1000);
+    let drainLength = Csharp_Number2Int(Math.max(playableLength - totalBreakTime, 0) / 1000);
 
     // objectToDrainRatio is float
     let objectToDrainRatio = Number2Float(Math.max(0, Math.min((this.HitObjects.length / drainLength * 8), 16)));
@@ -211,9 +213,6 @@ function Catch(osu, mods) {
     if (mods.NF) modMultiplier *= 0.5;
     if (mods.HD) modMultiplier *= 1.06;
     if (mods.FL) modMultiplier *= 1.12;
-
-    // decimal fix
-    modMultiplier = parseFloat(modMultiplier.toFixed(8));
 
     // ScoreMultiplier is double
     let ScoreMultiplier = difficultyMultiplier * modMultiplier;
@@ -245,6 +244,8 @@ function Catch(osu, mods) {
         }
     }
     this.baseScoreSS = Math.round(this.baseScoreSS);
+
+    // console.log("tinyCount: " + this.tinyCount);
 }
 Catch.prototype = Object.create(Beatmap.prototype, {
     approachTime: { // droptime
